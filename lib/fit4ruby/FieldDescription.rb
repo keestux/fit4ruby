@@ -38,18 +38,30 @@ module Fit4Ruby
          return
       end
 
-      app_id = developer_data_ids[@developer_data_index].application_id
-      # Convert the byte array with the app ID into a 16 character hex string.
-      app_id_str = app_id.map { |i| '%02X' % i }.join('')
-      @full_field_name =
-        "#{@field_name.gsub(/[^A-Za-z0-9_]/, '_')}_#{app_id_str}"
+      field_name = @field_name.gsub(/[^A-Za-z0-9_]/, '_')
+      if (app_id = developer_data_ids[@developer_data_index].application_id)
+        # Convert the byte array with the app ID into a 16 character hex string.
+        id_str = app_id.map { |i| '%02X' % i }.join('')
+        @full_field_name = "#{field_name}_#{id_str}"
+      else
+        @full_field_name = field_name
+      end
     end
 
     def create_global_definition(fit_entity)
       messages = fit_entity.developer_fit_messages
+      field_id = "'#{@field_name}' (developer data index " +
+        "#{@developer_data_index}, field #{@field_definition_number})"
+      # The native message number is optional. Without it, the field is not
+      # bound to a global message.
+      if @native_mesg_num.nil?
+        Log.debug { "Developer field description #{field_id} has no " +
+                    "native message number" }
+        return
+      end
       unless (gfm = GlobalFitMessages[@native_mesg_num])
-        Log.error "Developer field description references unknown global " +
-          "message number #{@native_mesg_num}"
+        Log.error "Developer field description #{field_id} references " +
+          "unknown global message number #{@native_mesg_num}"
         return
       end
 
@@ -78,4 +90,3 @@ module Fit4Ruby
   end
 
 end
-

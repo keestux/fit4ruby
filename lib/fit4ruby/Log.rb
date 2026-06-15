@@ -79,4 +79,3 @@ module Fit4Ruby
   end
 
 end
-
